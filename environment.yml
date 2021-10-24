@@ -1,0 +1,19 @@
+name: ee515-pytorch
+
+channels:
+    - pytorch
+
+dependencies:
+    - python=3.8
+    - numpy
+    - matplotlib
+    - torchvision>=0.8
+    - pytorch=1.7
+    - pillow>=6.0.0
+    - scipy
+    - pip
+    - notebook
+    - jupyterlab
+    - pip:
+        - torchsummary
+        - opencv-python
