@@ -25,6 +25,7 @@ class Options:
         self.source_dataset_name = self.config["DEFAULT"]["source_dataset_name"]
         self.target_dataset_name = self.config["DEFAULT"]["target_dataset_name"]
         self.batch_size = int(self.config["DEFAULT"]["batch_size"])
+        self.only_source = self.config["DEFAULT"].getboolean("only_source")
 
         self.learning_rate = float(self.config["DEFAULT"]["learning_rate"])
         self.optimizer = self.config["DEFAULT"]["optimizer"]
