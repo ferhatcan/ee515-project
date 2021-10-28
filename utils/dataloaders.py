@@ -70,12 +70,15 @@ def get_svhn_dataloaders(dataset_root, batch_size, train, transform):
     # datasets and data loader
     if train:
         svhn_dataset = datasets.SVHN(root=os.path.join(dataset_root), split='train', transform=transform, download=True)
+        svhn_dataset_extra = datasets.SVHN(root=os.path.join(dataset_root), split='extra', transform=transform, download=True)
         validation_percentage = 0.1
         valid_image_num = int(len(svhn_dataset) * validation_percentage)
         train_image_num = len(svhn_dataset) - valid_image_num
         train_dataset, valid_dataset = torch.utils.data.random_split(svhn_dataset, [train_image_num, valid_image_num])
-        svhn_train_data_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size,
-                                                             shuffle=True, drop_last=True)
+        svhn_train_data_loader = torch.utils.data.DataLoader(
+            dataset=torch.utils.data.ConcatDataset((train_dataset, svhn_dataset_extra)),
+            batch_size=batch_size,
+            shuffle=True, drop_last=True)
 
         svhn_validation_data_loader = torch.utils.data.DataLoader(dataset=valid_dataset, batch_size=batch_size,
                                                                   shuffle=True, drop_last=True)
