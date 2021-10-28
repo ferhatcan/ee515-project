@@ -1,4 +1,5 @@
 import os
+from itertools import cycle
 
 import torch
 import torch.nn as nn
@@ -23,13 +24,21 @@ class Experiment:
     def train_one_epoch(self, target_dataloader, source_dataloader, epoch_number):
         self.model.train()
         self.model.to(self.params.device)
-        len_dataloader = min(len(source_dataloader), len(target_dataloader))
 
-        for step, ((images_src, class_src), (images_tgt, _)) in enumerate(zip(source_dataloader, target_dataloader)):
+        if self.params.only_source:
+            len_dataloader = len(source_dataloader)
+        else:
+            len_dataloader = max(len(source_dataloader), len(target_dataloader))
+        if len(source_dataloader) >= len(target_dataloader):
+            zip_datasets = zip(source_dataloader, cycle(target_dataloader))
+        else:
+            zip_datasets = zip(cycle(source_dataloader), target_dataloader)
+
+        for step, ((images_src, class_src), (images_tgt, _)) in enumerate(zip_datasets):
             p = float(step + epoch_number * len_dataloader) / (self.params.epoch_num * len_dataloader)
             weight_lambda = 2. / (1. + np.exp(-10 * p)) - 1
 
-            self.adjust_lr(p)
+            # self.adjust_lr(p)
 
             if step > len_dataloader:
                 break
@@ -43,7 +52,6 @@ class Experiment:
             # make images variable
             class_src = class_src.to(self.params.device)
             images_src = images_src.to(self.params.device)
-            images_tgt = images_tgt.to(self.params.device)
 
             # zero gradients for optimizer
             self.optimizer.zero_grad()
@@ -54,10 +62,19 @@ class Experiment:
             src_loss_domain = self.criterion(src_domain_output, label_src)
 
             # train on target domain
-            _, tgt_domain_output = self.model(input_data=images_tgt, lambda_weight=weight_lambda)
-            tgt_loss_domain = self.criterion(tgt_domain_output, label_tgt)
+            if not self.params.only_source:
+                images_tgt = images_tgt.to(self.params.device)
+                _, tgt_domain_output = self.model(input_data=images_tgt, lambda_weight=weight_lambda)
+                tgt_loss_domain = self.criterion(tgt_domain_output, label_tgt)
 
-            loss = src_loss_class + src_loss_domain + tgt_loss_domain
+                loss = src_loss_class + src_loss_domain + tgt_loss_domain
+            else:
+                tgt_loss_domain = src_loss_domain
+                loss = src_loss_class
+
+            # optimize
+            loss.backward()
+            self.optimizer.step()
 
             # if self.params.src_only_flag:
             #     loss = src_loss_class
@@ -73,14 +90,20 @@ class Experiment:
     def train(self, target_dataloader, source_dataloader, save_name=""):
         for epoch in range(self.params.epoch_num):
             print("Epoch [{:2d}/{}] ".format(epoch+1, self.params.epoch_num))
-            len_dataloader = min(len(source_dataloader), len(target_dataloader))
 
-            self.train_one_epoch(target_dataloader, source_dataloader, epoch)
+            self.train_one_epoch(target_dataloader['train'], source_dataloader['train'], epoch)
 
             if save_name == "":
                 save_name = self.params.experiment_name + '_{:d}'.format(self.params.epoch_num)
             save_path = './trained_params/' + save_name + '_model_last.pth'
             self.save(save_path)
+
+            print('\n---------------------------------------------------------')
+            print('Source Domain Results: ')
+            self.test(source_dataloader['validation'], domain_flag='source')
+            print('Target Domain results: ')
+            self.test(target_dataloader['validation'], domain_flag='target')
+            print('---------------------------------------------------------\n')
 
     def test(self, dataloader, domain_flag='target'):
         self.model.eval()
