@@ -5,18 +5,37 @@ from utils.dataloaders import get_dataloaders
 from utils.experiment import Experiment
 from utils.parse_ini_file import Options
 
-from model import MNISTmodel
+from model import MNISTmodel, CNNModel
 
 
 params = Options('config.ini')
 
-mnist_dataloaders = get_dataloaders('mnist', batch_size=params.batch_size, train=True)
-svhn_dataloaders = get_dataloaders('svhn', batch_size=params.batch_size, train=True)
+if params.source_dataset_name == 'mnist':
+    source_dataloaders = get_dataloaders('mnist', batch_size=params.batch_size, train=True)
+    target_dataloaders = get_dataloaders('svhn', batch_size=params.batch_size, train=True)
+    source_dataloaders['test'] = get_dataloaders('mnist', batch_size=params.batch_size, train=False)['test']
+    target_dataloaders['test'] = get_dataloaders('svhn', batch_size=params.batch_size, train=False)['test']
 
-mnist_test_dataloaders = get_dataloaders('mnist', batch_size=params.batch_size, train=False)
-svhn_test_dataloaders = get_dataloaders('svhn', batch_size=params.batch_size, train=False)
+    if not params.only_source:
+        print('Unsupervised Domain Adaptation From {} To {}'.format('MNIST', 'SVHN'))
+    else:
+        print('Without domain adaptation, only trained on {}'.format('MNIST'))
+else:
+    source_dataloaders = get_dataloaders('svhn', batch_size=params.batch_size, train=True)
+    target_dataloaders = get_dataloaders('mnist', batch_size=params.batch_size, train=True)
+    source_dataloaders['test'] = get_dataloaders('svhn', batch_size=params.batch_size, train=False)['test']
+    target_dataloaders['test'] = get_dataloaders('mnist', batch_size=params.batch_size, train=False)['test']
+
+    if not params.only_source:
+        print('Unsupervised Domain Adaptation From {} To {}'.format('SVHN', 'MNIST'))
+    else:
+        print('Without domain adaptation, only trained on {}'.format('SVHN'))
+
 
 model = MNISTmodel()
+# model = CNNModel()
+for p in model.parameters():
+    p.requires_grad = True
 
 if params.optimizer == 'SGD':
     optimizer = optim.SGD(model.parameters(), lr=params.learning_rate,
@@ -30,12 +49,13 @@ else:
 
 
 criterion = nn.CrossEntropyLoss()
+# criterion = nn.NLLLoss()
 experiment = Experiment(model, optimizer, criterion, params)
 
-experiment.train(source_dataloader=mnist_dataloaders['train'], target_dataloader=svhn_dataloaders['train'])
-# experiment.load('./trained_params/MNIST-SVHN_10.pth')
+experiment.load('./trained_params/MNIST-cnst-LR_100_model_last.pth')
+# experiment.train(source_dataloader=source_dataloaders, target_dataloader=target_dataloaders)
 
 print('Source Domain Results: ')
-experiment.test(mnist_test_dataloaders['test'], domain_flag='source')
+experiment.test(source_dataloaders['test'], domain_flag='source')
 print('Target Domain results: ')
-experiment.test(svhn_test_dataloaders['test'], domain_flag='target')
+experiment.test(target_dataloaders['test'], domain_flag='target')
