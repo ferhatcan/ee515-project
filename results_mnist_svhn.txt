@@ -1,0 +1,38 @@
+------------------------------------------------
+Unsupervised Domain Adaptation From MNIST To SVHN
+Model parameters are successfully loaded from ./trained_params/MNIST-SVHN-cnst-LR_1000_model_last.pth
+Source Domain Results: 
+Avg Loss = 0.000171, Avg Accuracy = 99.14%, 9898.0/9984, Avg Domain Accuracy = 48.908253%
+Target Domain results: 
+Avg Loss = 0.012339, Avg Accuracy = 31.60%, 8170.0/25856, Avg Domain Accuracy = 54.084158%
+------------------------------------------------
+
+
+------------------------------------------------
+Unsupervised Domain Adaptation From SVHN To MNIST
+Model parameters are successfully loaded from ./trained_params/SVHN-MNIST-cnst-LR-v3_1000_model_last.pth
+Source Domain Results: 
+Avg Loss = 0.001666, Avg Accuracy = 86.92%, 22473.0/25856, Avg Domain Accuracy = 99.462407%
+Target Domain results: 
+Avg Loss = 0.002925, Avg Accuracy = 79.08%, 7895.0/9984, Avg Domain Accuracy = 77.413862%
+------------------------------------------------
+
+
+------------------------------------------------
+Without domain adaptation, only trained on SVHN
+Model parameters are successfully loaded from ./trained_params/SVHN-cnst-LR_100_model_last.pth
+Source Domain Results: 
+Avg Loss = 0.000633, Avg Accuracy = 95.83%, 24777.0/25856, Avg Domain Accuracy = 60.543007%
+Target Domain results: 
+Avg Loss = 0.004813, Avg Accuracy = 75.97%, 7585.0/9984, Avg Domain Accuracy = 25.661058%
+------------------------------------------------
+
+
+------------------------------------------------
+Without domain adaptation, only trained on MNIST
+Model parameters are successfully loaded from ./trained_params/MNIST-cnst-LR_100_model_last.pth
+Source Domain Results: 
+Avg Loss = 0.000086, Avg Accuracy = 99.30%, 9914.0/9984, Avg Domain Accuracy = 35.697115%
+Target Domain results: 
+Avg Loss = 0.017612, Avg Accuracy = 20.22%, 5227.0/25856, Avg Domain Accuracy = 1.195080%
+------------------------------------------------
